@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamGuide - AutoStream</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0a0c;
+            --glass-bg: rgba(255, 255, 255, 0.02);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --text-main: #f0f0f0;
+            --text-muted: #6e6e78;
+            --accent: #ffffff;
+            --user-bubble: rgba(255, 255, 255, 0.08);
+            --agent-bubble: rgba(0, 0, 0, 0.4);
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            /* Monochromatic gradient glow */
+            background-image: radial-gradient(circle at 50% 0%, #1c1c24 0%, transparent 60%);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 900px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 24px 50px rgba(0,0,0,0.6);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--text-main);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg-deep);
+            font-weight: 600;
+            font-size: 1.2rem;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .title h1 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            color: var(--text-main);
+        }
+
+        .title p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .messages {
+            flex-grow: 1;
+            padding: 32px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 10px;
+        }
+
+        .message {
+            max-width: 75%;
+            line-height: 1.6;
+            padding: 16px 20px;
+            border-radius: 18px;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .message.agent {
+            align-self: flex-start;
+            background: var(--agent-bubble);
+            border: 1px solid var(--glass-border);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--user-bubble);
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .input-area {
+            padding: 24px 32px;
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .input-wrapper {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 24px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.02);
+        }
+
+        button {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: none;
+            background: var(--text-main);
+            color: var(--bg-deep);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            background: #d1d1d1;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: transparent;
+            padding: 8px 12px;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: pulse 1.4s infinite ease-in-out;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.7); opacity: 0.3; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="chat-container">
+        <div class="header">
+            <div class="avatar">S</div>
+            <div class="title">
+                <h1>StreamGuide</h1>
+                <p>AutoStream Support Agent</p>
+            </div>
+        </div>
+        
+        <div class="messages" id="chat-box">
+            <!-- Messages inject here -->
+        </div>
+
+        <div class="typing-indicator" id="typing">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrapper">
+                <input type="text" id="user-input" placeholder="Message StreamGuide..." autocomplete="off">
+            </div>
+            <button id="send-btn" aria-label="Send">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const typingIndicator = document.getElementById('typing');
+        
+        // Unique tracking ID for LangGraph Memory Saver
+        const threadId = crypto.randomUUID();
+
+        function parseMessage(text) {
+            // Very simple parser for markdown bolding/newlines
+            return text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                       .replace(/\n/g, '<br>');
+        }
+
+        function addMessage(content, sender) {
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.innerHTML = parseMessage(content);
+            chatBox.insertBefore(div, typingIndicator);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage(text, isInitialization = false) {
+            if (!text && !isInitialization) return;
+            
+            if (!isInitialization) {
+                addMessage(text, 'user');
+                userInput.value = '';
+            }
+
+            // Bring typing indicator to bottom and show
+            chatBox.appendChild(typingIndicator);
+            typingIndicator.style.display = 'flex';
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, thread_id: threadId })
+                });
+                const data = await response.json();
+                
+                typingIndicator.style.display = 'none';
+                
+                if(data.response) {
+                    addMessage(data.response, 'agent');
+                } else if(data.error) {
+                    addMessage(`SYSTEM ERROR: ${data.error}`, 'agent');
+                } else {
+                    addMessage("Sorry, connection issue.", 'agent');
+                }
+            } catch (err) {
+                typingIndicator.style.display = 'none';
+                addMessage("Warning: Connection lost.", 'agent');
+            }
+        }
+
+        // Listeners for input
+        sendBtn.addEventListener('click', () => sendMessage(userInput.value));
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage(userInput.value);
+        });
+
+        // Implicitly trigger the welcome state upon load 
+        setTimeout(() => sendMessage('', true), 300);
+
+    </script>
+</body>
+</html>

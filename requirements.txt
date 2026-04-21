@@ -1,0 +1,8 @@
+langgraph
+langchain-core
+langchain-groq
+pydantic
+python-dotenv
+langgraph-checkpoint-memory
+fastapi
+uvicorn
